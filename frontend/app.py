@@ -25,25 +25,6 @@ except Exception as e:
     # Stop the app if the model fails to initialize.
     st.stop()
 
-# --- PDF Loading Function ---
-@st.cache_data
-def load_knowledge_base_from_pdfs(folder_path):
-    text = ""
-    # ... (rest of the PDF function is the same)
-    try:
-        for filename in os.listdir(folder_path):
-            if filename.endswith('.pdf'):
-                filepath = os.path.join(folder_path, filename)
-                with open(filepath, 'rb') as pdf_file:
-                    pdf_reader = PyPDF2.PdfReader(pdf_file)
-                    for page in pdf_reader.pages:
-                        page_text = page.extract_text()
-                        if page_text:
-                            text += page_text
-    except FileNotFoundError:
-        # This will be handled gracefully in the Info Wing now.
-        pass
-    return text
 
 # --- Navigation Functions ---
 def go_to_page(page_name):
@@ -77,7 +58,7 @@ elif st.session_state.page == 'info_wing':
     st.button("← Back to Home", on_click=go_to_page, args=['home'])
     st.markdown("Ask any question about the schemes in our knowledge base.")
 
-    knowledge_base = load_knowledge_base_from_pdfs("knowledge_base")
+    knowledge_base = None # Add knowledge base later
 
     if not knowledge_base:
         st.warning("Knowledge base is empty. Please add PDF files to the 'knowledge_base' folder in your project directory.")
