@@ -1,3 +1,8 @@
-loopchat/*
+loopchat/
 loopchat
 .env
+.venv
+.venv/
+__pycache__/
+*.pyc
+backend/app/hardhat_project/node_modules/

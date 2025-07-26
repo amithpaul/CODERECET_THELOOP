@@ -1,0 +1,11 @@
+(await instance.balanceOf(accounts[1].address)).toString()
+await instance.mintIdea(accounts[1].address)
+const accounts = await hre.ethers.getSigners()
+const instance = await IdeaNFT.attach("0x5287db2bE7E0Fc9916BF5100F78D50b87e1240E6")
+const IdeaNFT = await hre.ethers.getContractFactory("IdeaNFT")
+const instance = await IdeaNFT.attach("0x5287db2bE7E0Fc9916BF5100F78D50b87e1240E6")
+const IdeaNFT = await hre.ethers.getContractFactory
+const IdeaNFT = await hre.ethers.getContractFactorconst instance = await IdeaNFT.attach
+const accounts = await hre.ethers.getSigners()
+("0x5287db2bE7E0Fc9916BF5100F78D50b87e1240E6") // PASTE YOUR CONTRACT ADDRESS HERE
+const IdeaNFT = await hre.ethers.getContractFactorconst instance = await IdeaNFT.attach

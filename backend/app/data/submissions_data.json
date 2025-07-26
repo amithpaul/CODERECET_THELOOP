@@ -1,0 +1,32 @@
+{
+  "submissions": [
+    {
+      "title": "Need a car",
+      "description": "Need a car",
+      "district": "Thiruvananthapuram",
+      "analysis": "Summary: This proposal, titled \"Need a car,\" lacks sufficient detail to provide a compelling summary of a development initiative for Kerala.\n\nTags: [#InsufficientData, #UnclearProposal, #NeedsMoreInformation, #Development]\n\nSentiment: Neutral\n\nInnovation Score: 1/10\n",
+      "submitter": "0x7daBE1C8c8D5fae90276a0F91E09dDE6f1b3485b",
+      "timestamp": "2025-07-26 10:22:10",
+      "nft_minted": true,
+      "nft_token_id": 4,
+      "tx_hash": "2ec1f0ad89650b9103d3e4d0af91d1a93cb240ca7d0c4f5943ec453fd40069ff"
+    },
+    {
+      "title": "Need a car",
+      "description": "Need a car",
+      "district": "Kollam",
+      "analysis": "Summary: The proposal, titled \"Need a car,\" lacks sufficient detail to provide a compelling summary of a development initiative for Kerala.\n\nTags: [#Incomplete, #Unclear, #InsufficientInformation, #NoImpact]\n\nSentiment: Neutral\n\nInnovation Score: 1/10\n",
+      "submitter": "0x7daBE1C8c8D5fae90276a0F91E09dDE6f1b3485b",
+      "timestamp": "2025-07-26 10:32:26",
+      "nft_minted": true,
+      "nft_token_id": 6,
+      "tx_hash": "cc267ed261c996174bf54a43fb40745dd6078857756ba244bd3a615de20ffdc9"
+    }
+  ],
+  "votes": {
+    "Need a car": 70
+  },
+  "last_updated": "2025-07-26T10:52:47.062145",
+  "total_submissions": 2,
+  "total_votes": 70
+}
