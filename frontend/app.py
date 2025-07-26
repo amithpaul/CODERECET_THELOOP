@@ -1,7 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 import os
-# import PyPDF2
+import PyPDF2
 from pathlib import Path
 import json
 from web3 import Web3
@@ -192,7 +192,7 @@ def create_leaderboard():
 def initialize_ai_model():
     """Initialize AI model separately"""
     try:
-        api_key = "AIzaSyBVfuwhsmTb7MYRvN0-5Y8bMbAKh8vh9WM"  # Replace with your actual API key
+        api_key = "AIzaSyBxCfnv1M6dg6NZXZIljFXom1ghLKYIl6c"  # Replace with your actual API key
         if api_key == "YOUR_API_KEY_HERE":
             st.error("⚠️ Please set your Google Gemini API key in the code!")
             return None
@@ -329,33 +329,33 @@ if st.sidebar.button("🔄 Refresh Connections"):
     st.rerun()
 
 # # --- PDF Loading Function ---
-# @st.cache_data
-# def load_knowledge_base_from_pdfs(folder_path):
-#     text = ""
-#     try:
-#         pdf_files = []
-#         for filename in os.listdir(folder_path):
-#             if filename.endswith('.pdf'):
-#                 pdf_files.append(filename)
-#                 filepath = os.path.join(folder_path, filename)
-#                 with open(filepath, 'rb') as pdf_file:
-#                     pdf_reader = PyPDF2.PdfReader(pdf_file)
-#                     for page in pdf_reader.pages:
-#                         page_text = page.extract_text()
-#                         if page_text:
-#                             text += page_text
+@st.cache_data
+def load_knowledge_base_from_pdfs(folder_path):
+    text = ""
+    try:
+        pdf_files = []
+        for filename in os.listdir(folder_path):
+            if filename.endswith('.pdf'):
+                pdf_files.append(filename)
+                filepath = os.path.join(folder_path, filename)
+                with open(filepath, 'rb') as pdf_file:
+                    pdf_reader = PyPDF2.PdfReader(pdf_file)
+                    for page in pdf_reader.pages:
+                        page_text = page.extract_text()
+                        if page_text:
+                            text += page_text
         
-#         if pdf_files:
-#             st.sidebar.success(f"📚 Knowledge Base: {len(pdf_files)} PDFs loaded")
-#         else:
-#             st.sidebar.warning("📚 Knowledge Base: No PDFs found")
+        if pdf_files:
+            st.sidebar.success(f"📚 Knowledge Base: {len(pdf_files)} PDFs loaded")
+        else:
+            st.sidebar.warning("📚 Knowledge Base: No PDFs found")
                             
-#     except FileNotFoundError:
-#         st.sidebar.warning("📚 Knowledge Base: Folder not found")
-#     except Exception as e:
-#         st.sidebar.error(f"📚 Knowledge Base: Error loading - {str(e)}")
+    except FileNotFoundError:
+        st.sidebar.warning("📚 Knowledge Base: Folder not found")
+    except Exception as e:
+        st.sidebar.error(f"📚 Knowledge Base: Error loading - {str(e)}")
     
-#     return text
+    return text
 
 # --- Navigation Functions ---
 def go_to_page(page_name):
@@ -474,7 +474,7 @@ elif st.session_state.page == 'info_wing':
     st.markdown("Ask any question about the schemes in our knowledge base.")
 
     script_directory = Path(__file__).parent
-    knowledge_base_folder = script_directory / "knowledge_base"
+    knowledge_base_folder = "frontend\data"
     knowledge_base = load_knowledge_base_from_pdfs(knowledge_base_folder)
 
     if not knowledge_base:
