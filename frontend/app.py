@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+import together  # Together.ai client
 import os
 import PyPDF2
 from pathlib import Path
@@ -13,6 +13,9 @@ import plotly.graph_objects as go
 import pandas as pd
 from datetime import datetime
 import random
+
+# Added import for embedding service
+from embedding import EmbeddingService
 
 # --- Page Configuration (MUST be the first command) ---
 st.set_page_config(page_title="The Loop | Kerala", page_icon="🔄", layout="wide")
@@ -38,6 +41,16 @@ if 'map_needs_update' not in st.session_state:
     st.session_state.map_needs_update = True
 if 'data_loaded' not in st.session_state:
     st.session_state.data_loaded = False
+if 'ai_model_initialized' not in st.session_state:
+    st.session_state.ai_model_initialized = False
+if 'together_client' not in st.session_state:
+    st.session_state.together_client = None
+
+# --- NEW: Session state for embedding service and rag initialization ---
+if 'embedding_service' not in st.session_state:
+    st.session_state.embedding_service = None
+if 'rag_initialized' not in st.session_state:
+    st.session_state.rag_initialized = False
 
 # --- Kerala Districts Data for Heatmap ---
 KERALA_DISTRICTS = {
@@ -102,7 +115,7 @@ if not st.session_state.data_loaded:
     if success:
         st.sidebar.success(f"📁 {message}")
 
-# --- Map Functions (Fixed Version) ---
+# --- Map Functions ---
 def get_district_data():
     """Get current district data with idea counts"""
     district_data = {}
@@ -187,23 +200,71 @@ def create_leaderboard():
     leaderboard.sort(key=lambda x: (x['votes'], x['rewards']), reverse=True)
     return leaderboard
 
-# --- Centralized Setup for AI and Blockchain ---
+# --- Together.ai Integration Functions ---
+
 @st.cache_resource
-def initialize_ai_model():
-    """Initialize AI model separately"""
+def initialize_together_client():
+    """Initialize Together.ai client with the provided API key"""
     try:
-        api_key = "AIzaSyBxCfnv1M6dg6NZXZIljFXom1ghLKYIl6c"  # Replace with your actual API key
-        if api_key == "YOUR_API_KEY_HERE":
-            st.error("⚠️ Please set your Google Gemini API key in the code!")
-            return None
+        api_key = "e7a501a28a46881b3559d8599dd96cf6bb100fe303fc4cfa67f02c023b193d41"
         
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        return model
+        # Initialize the Together client
+        client = together.Client(api_key=api_key)
+        
+        # Test the connection by making a simple request
+        response = client.chat.completions.create(
+            model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+            messages=[{"role": "user", "content": "Test connection"}],
+            max_tokens=10
+        )
+        
+        return client
     except Exception as e:
-        st.error(f"Error setting up AI model: {e}")
+        st.error(f"❌ Error initializing Together.ai client: {e}")
         return None
 
+def generate_ai_response(client, prompt, max_tokens=1024):
+    """Generate AI response using Together.ai client"""
+    try:
+        response = client.chat.completions.create(
+            model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=max_tokens,
+            temperature=0.7
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        if "rate limit" in str(e).lower():
+            return "Error: API rate limit exceeded. Please check your Together.ai plan and try again later."
+        return f"Error generating response: {str(e)}"
+
+def analyze_idea_with_ai(client, idea_title, idea_description):
+    """Analyze an idea using Together.ai"""
+    prompt = f"""
+    Analyze the following innovative idea for Kerala's development. Perform these tasks:
+    
+    1. **Summary**: Write a clear, compelling one-sentence summary of the core proposal
+    2. **Impact Tags**: Suggest exactly 4 relevant hashtags that categorize the idea's impact areas (e.g., #Education, #Healthcare, #Technology, #Environment)
+    3. **Sentiment**: Classify the overall sentiment as Positive, Negative, or Neutral
+    4. **Innovation Score**: Rate the innovation level from 1-10 based on uniqueness and feasibility
+    
+    Idea Title: "{idea_title}"
+    Idea Description: "{idea_description}"
+
+    Format your response exactly like this:
+    Summary: [Your compelling summary here]
+    Tags: [#tag1, #tag2, #tag3, #tag4]
+    Sentiment: [Positive/Negative/Neutral]
+    Innovation Score: [1-10]/10
+    """
+    return generate_ai_response(client, prompt, max_tokens=256)
+
+def answer_question_with_ai(client, question, knowledge_base):
+    """Answer questions using Together.ai and knowledge base"""
+    prompt = f"Context:\n{knowledge_base}\n\nBased ONLY on the context, answer the question: {question}"
+    return generate_ai_response(client, prompt, max_tokens=1024)
+
+# --- Blockchain Initialization ---
 def initialize_blockchain():
     """Initialize blockchain connection with better error handling"""
     try:
@@ -242,7 +303,7 @@ def initialize_blockchain():
         
         try:
             idea_nft_address = "0x5287db2bE7E0Fc9916BF5100F78D50b87e1240E6"
-            idea_nft_abi_path = Path(__file__).parent / 'hardhat_project' / 'artifacts' / 'contracts' / 'IdeaNFT.sol' / 'IdeaNFT.json'
+            idea_nft_abi_path = Path(__file__).parent.parent / 'backend' / 'hardhat_project' / 'artifacts' / 'contracts' / 'IdeaNFT.sol' / 'IdeaNFT.json'
             
             if idea_nft_abi_path.exists():
                 with open(idea_nft_abi_path, 'r') as f:
@@ -275,9 +336,13 @@ def initialize_blockchain():
         st.sidebar.error("Please ensure Ganache is running and try refreshing the page.")
         return None, None, None, None
 
-# Initialize connections
+# --- Initialize connections ---
 if 'initialized' not in st.session_state:
-    st.session_state.model = initialize_ai_model()
+    # Initialize Together.ai client
+    st.session_state.together_client = initialize_together_client()
+    st.session_state.ai_model_initialized = st.session_state.together_client is not None
+    
+    # Initialize blockchain
     st.session_state.w3, st.session_state.accounts, st.session_state.idea_nft, st.session_state.loop_token = initialize_blockchain()
     st.session_state.initialized = True
     
@@ -286,11 +351,47 @@ if 'initialized' not in st.session_state:
     if st.session_state.blockchain_connected and st.session_state.accounts:
         st.session_state.user_wallet = st.session_state.accounts[0]
 
+# --- NEW: Initialize or reset RAG system ---
+def initialize_rag_system():
+    """Initialize the RAG system using the embedding service"""
+    if st.session_state.rag_initialized:
+        return True
+    
+    try:
+        embedding_service = EmbeddingService(
+            db_path="./data/chroma_db",
+            model_name='all-MiniLM-L6-v2'
+        )
+        
+        if not embedding_service.setup():
+            st.sidebar.error("❌ Failed to initialize embedding service")
+            return False
+        
+        success, message = embedding_service.index_documents("frontend/data/pdfs")
+        
+        if success:
+            st.session_state.embedding_service = embedding_service
+            st.session_state.rag_initialized = True
+            st.sidebar.success(f"📚 RAG System: {message}")
+            return True
+        else:
+            st.sidebar.error(f"❌ RAG System: {message}")
+            return False
+            
+    except Exception as e:
+        st.sidebar.error(f"❌ RAG initialization failed: {str(e)}")
+        return False
+
+# Run RAG initialization if not done
+if not st.session_state.rag_initialized:
+    with st.spinner("Initializing RAG system..."):
+        initialize_rag_system()
+
 # --- Sidebar Status ---
 st.sidebar.title("🔗 Connection Status")
 
-if st.session_state.model:
-    st.sidebar.success("🤖 AI Model: Connected")
+if st.session_state.get('ai_model_initialized', False):
+    st.sidebar.success("🤖 AI Model: Connected (Together.ai)")
 else:
     st.sidebar.error("🤖 AI Model: Not Connected")
 
@@ -321,41 +422,49 @@ else:
     st.sidebar.error("⛓️ Blockchain: Not Connected")
     st.sidebar.warning("NFT minting and token rewards will not work")
 
+# Refresh Connections button also resets RAG state
 if st.sidebar.button("🔄 Refresh Connections"):
     st.cache_resource.clear()
-    for key in ['initialized', 'model', 'w3', 'accounts', 'idea_nft', 'loop_token']:
+    st.cache_data.clear()
+    for key in ['initialized', 'ai_model_initialized', 'together_client', 'w3', 'accounts', 'idea_nft', 'loop_token', 'embedding_service', 'rag_initialized']:
         if key in st.session_state:
             del st.session_state[key]
-    st.rerun()
+    st.experimental_rerun()
 
-# # --- PDF Loading Function ---
-@st.cache_data
-def load_knowledge_base_from_pdfs(folder_path):
-    text = ""
-    try:
-        pdf_files = []
-        for filename in os.listdir(folder_path):
-            if filename.endswith('.pdf'):
-                pdf_files.append(filename)
-                filepath = os.path.join(folder_path, filename)
-                with open(filepath, 'rb') as pdf_file:
-                    pdf_reader = PyPDF2.PdfReader(pdf_file)
-                    for page in pdf_reader.pages:
-                        page_text = page.extract_text()
-                        if page_text:
-                            text += page_text
-        
-        if pdf_files:
-            st.sidebar.success(f"📚 Knowledge Base: {len(pdf_files)} PDFs loaded")
-        else:
-            st.sidebar.warning("📚 Knowledge Base: No PDFs found")
-                            
-    except FileNotFoundError:
-        st.sidebar.warning("📚 Knowledge Base: Folder not found")
-    except Exception as e:
-        st.sidebar.error(f"📚 Knowledge Base: Error loading - {str(e)}")
+# --- New answer function for RAG ---
+def answer_question_with_rag(client, question: str):
+    """Answer questions using RAG with retrieved chunks"""
+    if not st.session_state.embedding_service:
+        return "RAG system not initialized. Please check the setup."
     
-    return text
+    relevant_chunks = st.session_state.embedding_service.retrieve_chunks(question, top_k=3)
+    
+    if not relevant_chunks:
+        return "I couldn't find relevant information in the knowledge base to answer your question."
+    
+    context_parts = []
+    sources = []
+    
+    for i, chunk in enumerate(relevant_chunks):
+        context_parts.append(f"[Source {i+1}: {chunk['source']}]\n{chunk['text']}")
+        sources.append(f"{chunk['source']} (relevance: {chunk['relevance_score']:.2f})")
+    
+    context = "\n\n".join(context_parts)
+    
+    prompt = f"""Based on the following context from government documents, answer the user's question. If the context doesn't contain enough information to answer completely, say so.
+
+Context:
+{context}
+
+Question: {question}
+
+Answer: Provide a detailed answer based on the context above. If you reference specific information, mention which source it came from."""
+    
+    response = generate_ai_response(client, prompt, max_tokens=1024)
+    
+    response += f"\n\n**Sources consulted:**\n" + "\n".join([f"• {source}" for source in sources])
+    
+    return response
 
 # --- Navigation Functions ---
 def go_to_page(page_name):
@@ -363,13 +472,12 @@ def go_to_page(page_name):
 
 # --- Main App Router ---
 
-# Display the HOME page
 if st.session_state.page == 'home':
     st.title("Welcome to The Loop Kerala 🇮🇳")
     st.markdown("A digital ecosystem designed to bridge the gap between the youth and governance in Kerala.")
     st.markdown("---")
     
-    if not st.session_state.model:
+    if not st.session_state.get('ai_model_initialized', False):
         st.warning("⚠️ AI model not connected. Information Wing may not work properly.")
     
     if not st.session_state.blockchain_connected:
@@ -425,10 +533,10 @@ if st.session_state.page == 'home':
         
         if not any(data["ideas"] > 0 for _, data in sorted_districts):
             st.info("🎯 No ideas submitted yet. Be the first to contribute!")
-        
+            
         if st.button("🔄 Refresh Map", key="refresh_map_btn"):
             st.session_state.map_needs_update = True
-            st.rerun()
+            st.experimental_rerun()
     
     st.markdown("---")
     
@@ -439,7 +547,7 @@ if st.session_state.page == 'home':
     with col1:
         st.subheader("💡 Information Wing")
         st.write("Ask questions about government schemes.")
-        info_disabled = not st.session_state.model
+        info_disabled = not st.session_state.get('ai_model_initialized', False)
         st.button(
             "Go to Information Wing", 
             on_click=go_to_page, 
@@ -462,49 +570,39 @@ if st.session_state.page == 'home':
     st.markdown("---")
     st.button("View Officials' Dashboard", on_click=go_to_page, args=['dashboard'])
 
-# Display the INFORMATION WING page
 elif st.session_state.page == 'info_wing':
     st.title("Information Wing | Ask the AI")
     st.button("← Back to Home", on_click=go_to_page, args=['home'])
     
-    if not st.session_state.model:
+    if not st.session_state.get('ai_model_initialized', False):
         st.error("❌ AI model is not connected. Please check your API key and refresh connections.")
         st.stop()
     
-    st.markdown("Ask any question about the schemes in our knowledge base.")
+    if not st.session_state.rag_initialized:
+        st.error("❌ RAG system is not initialized. Please check your PDF files and refresh.")
+        st.stop()
+    
+    st.markdown("Ask any question about the schemes in our knowledge base. The AI will search through relevant document chunks to provide accurate answers.")
+    
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-    script_directory = Path(__file__).parent
-    knowledge_base_folder = "frontend\data"
-    knowledge_base = load_knowledge_base_from_pdfs(knowledge_base_folder)
+    if user_question := st.chat_input("What is your question?"):
+        st.session_state.messages.append({"role": "user", "content": user_question})
+        with st.chat_message("user"):
+            st.markdown(user_question)
+        
+        with st.chat_message("assistant"):
+            with st.spinner("Searching knowledge base and generating answer..."):
+                ai_answer = answer_question_with_rag(
+                    st.session_state.together_client, 
+                    user_question
+                )
+                st.write(ai_answer)
+        
+        st.session_state.messages.append({"role": "assistant", "content": ai_answer})
 
-    if not knowledge_base:
-        st.warning(f"Knowledge base is empty. Please create a folder named 'knowledge_base' and add your PDFs.")
-    else:
-        def answer_question(question):
-            try:
-                prompt = f"Context:\n{knowledge_base}\n\nBased ONLY on the context, answer the question: {question}"
-                response = st.session_state.model.generate_content(prompt)
-                return response.text
-            except Exception as e:
-                return f"Error generating response: {str(e)}"
-
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-
-        if user_question := st.chat_input("What is your question?"):
-            st.session_state.messages.append({"role": "user", "content": user_question})
-            with st.chat_message("user"):
-                st.markdown(user_question)
-            
-            with st.chat_message("assistant"):
-                with st.spinner("Thinking..."):
-                    ai_answer = answer_question(user_question)
-                    st.write(ai_answer)
-            
-            st.session_state.messages.append({"role": "assistant", "content": ai_answer})
-
-# Display the INNOVATION WING page
 elif st.session_state.page == 'innovation_wing':
     st.title("Innovation Wing | Submit Your Idea 💡")
     st.button("← Back to Home", on_click=go_to_page, args=['home'])
@@ -569,7 +667,7 @@ elif st.session_state.page == 'innovation_wing':
     
     🎁 **Special Reward:** Every submitted idea gets you a unique **Idea NFT** as proof of your contribution to Kerala's development!
     """)
-
+    
     if not st.session_state.blockchain_connected:
         st.error("❌ **NFT Minting Unavailable** - Blockchain not connected")
         st.warning("💡 Ideas will be saved locally, but you won't receive your NFT reward until blockchain is connected.")
@@ -636,30 +734,13 @@ elif st.session_state.page == 'innovation_wing':
                 progress_bar.progress(25)
                 
                 analysis_result = "Analysis not available (AI model not connected)"
-                if st.session_state.model:
+                if st.session_state.get('ai_model_initialized', False) and st.session_state.together_client:
                     try:
-                        def analyze_idea(idea_text):
-                            prompt = f"""
-                            Analyze the following innovative idea for Kerala's development. Perform these tasks:
-                            
-                            1. **Summary**: Write a clear, compelling one-sentence summary of the core proposal
-                            2. **Impact Tags**: Suggest exactly 4 relevant hashtags that categorize the idea's impact areas (e.g., #Education, #Healthcare, #Technology, #Environment)
-                            3. **Sentiment**: Classify the overall sentiment as Positive, Negative, or Neutral
-                            4. **Innovation Score**: Rate the innovation level from 1-10 based on uniqueness and feasibility
-                            
-                            Idea Title: "{idea_title}"
-                            Idea Description: "{idea_text}"
-
-                            Format your response exactly like this:
-                            Summary: [Your compelling summary here]
-                            Tags: [#tag1, #tag2, #tag3, #tag4]
-                            Sentiment: [Positive/Negative/Neutral]
-                            Innovation Score: [1-10]/10
-                            """
-                            response = st.session_state.model.generate_content(prompt)
-                            return response.text
-                        
-                        analysis_result = analyze_idea(idea_description)
+                        analysis_result = analyze_idea_with_ai(
+                            st.session_state.together_client,
+                            idea_title,
+                            idea_description
+                        )
                     except Exception as e:
                         analysis_result = f"Analysis error: {str(e)}"
                 
@@ -728,7 +809,7 @@ elif st.session_state.page == 'innovation_wing':
                 if nft_success:
                     st.success("🎉 **Congratulations! Your idea has been submitted successfully!**")
                     
-                    with st.container(border=True):
+                    with st.container():
                         st.markdown("### 🎨 Your NFT Reward")
                         col1, col2 = st.columns(2)
                         with col1:
@@ -748,10 +829,10 @@ elif st.session_state.page == 'innovation_wing':
                     else:
                         st.success("✅ **Your idea has been submitted successfully!**")
                         st.info("🎨 **NFT Pending:** Connect to blockchain to receive your NFT reward!")
-
+                
                 st.markdown("---")
                 st.markdown("### 🤖 AI Analysis Results")
-                with st.container(border=True):
+                with st.container():
                     st.markdown(analysis_result)
                 
                 st.markdown("---")
@@ -761,7 +842,6 @@ elif st.session_state.page == 'innovation_wing':
                 st.warning("⚠️ Please fill out both the title and description to submit your idea.")
                 st.info("💡 **Tip:** The more detailed your description, the better your NFT and potential rewards!")
 
-# Display the OFFICIALS' DASHBOARD page
 elif st.session_state.page == 'dashboard':
     st.title("Officials' Dashboard | Submitted Ideas 📋")
     st.button("← Back to Home", on_click=go_to_page, args=['home'])
@@ -782,7 +862,7 @@ elif st.session_state.page == 'dashboard':
             if success:
                 st.success(f"✅ {message}")
                 update_map_trigger()
-                st.rerun()
+                st.experimental_rerun()
             else:
                 st.error(f"❌ Load failed: {message}")
     
@@ -827,13 +907,12 @@ elif st.session_state.page == 'dashboard':
         )
 
         for i, submission in enumerate(sorted_submissions):
-            # FIXED: Create unique identifier for each submission
             submission_id = f"{submission['title']}_{i}_{submission.get('timestamp', 'unknown')}"
             
             if submission['title'] not in st.session_state.votes:
                 st.session_state.votes[submission['title']] = 0
             
-            with st.container(border=True):
+            with st.container():
                 col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
                 with col1:
                     rank_emoji = "🥇" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else "💡"
@@ -863,7 +942,6 @@ elif st.session_state.page == 'dashboard':
                 with col2:
                     st.write(f"**📅 Submitted:** {timestamp}")
 
-                # FIXED: Remove key parameter from expanders
                 if submission.get('nft_minted', False):
                     with st.expander(f"🎨 NFT Details — {submission_id[:20]}"):
                         nft_col1, nft_col2 = st.columns(2)
@@ -879,32 +957,31 @@ elif st.session_state.page == 'dashboard':
                 with st.expander(f"📖 Full Description — {submission_id[:20]}"):
                     st.write(submission['description'])
 
-                # FIXED: Using unique keys for all buttons
                 col1, col2 = st.columns([1, 3])
                 with col1:
                     if st.button("👍 Upvote", key=f"upvote_{submission_id}", use_container_width=True):
                         st.session_state.votes[submission['title']] += 1
                         save_submissions_to_json()
-                        st.rerun()
+                        st.experimental_rerun()
                 with col2:
                     vote_col1, vote_col2, vote_col3 = st.columns(3)
                     with vote_col1:
                         if st.button("+5 votes", key=f"vote5_{submission_id}"):
                             st.session_state.votes[submission['title']] += 5
                             save_submissions_to_json()
-                            st.rerun()
+                            st.experimental_rerun()
                     with vote_col2:
                         if st.button("+10 votes", key=f"vote10_{submission_id}"):
                             st.session_state.votes[submission['title']] += 10
                             save_submissions_to_json()
-                            st.rerun()
+                            st.experimental_rerun()
                     with vote_col3:
                         if st.button("🌟 Feature", key=f"feature_{submission_id}"):
                             st.session_state.votes[submission['title']] += 25
                             save_submissions_to_json()
                             st.success("⭐ Featured idea!")
-                            st.rerun()
-
+                            st.experimental_rerun()
+                
                 st.subheader("🏆 Reward Outstanding Contribution")
                 
                 if st.session_state.blockchain_connected and st.session_state.loop_token and submitter_address != 'No wallet connected':
@@ -995,3 +1072,6 @@ elif st.session_state.page == 'dashboard':
             """)
         
         st.info("**Next Steps:** Visit the Innovation Wing to submit the first idea and test the NFT minting system!")
+
+
+# --- End of main.py ---

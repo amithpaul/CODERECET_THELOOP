@@ -18,8 +18,29 @@
       "timestamp": "2025-07-26 12:54:02",
       "nft_minted": false,
       "rewards": []
+    },
+    {
+      "title": "School in Varkala for special needs kids",
+      "description": "It allows education t obe accessed by special needs kids\nthe tourist charity income direct;y goes to school\ngood for society",
+      "district": "Thiruvananthapuram",
+      "analysis": " Summary: A specialized school in Varkala for the education of special needs children, funded by tourist charity donations.\n\nTags: #Education, #SpecialNeeds, #Charity, #Tourism\n\nSentiment: Positive\n\nInnovation Score: 7/10\n\nThe idea of a specialized school for special needs children is not completely new but implementing it in Varkala and funding it through tourist charity donations adds a unique twist. The innovation score reflects the combination of uniqueness and feasibility. This idea can be impactful and beneficial for both the children and the local community.",
+      "submitter": "0x7daBE1C8c8D5fae90276a0F91E09dDE6f1b3485b",
+      "timestamp": "2025-07-26 18:09:12"
+    },
+    {
+      "title": "School in Varkala for special needs kids",
+      "description": "It allows education t obe accessed by special needs kids\nthe tourist charity income direct;y goes to school\ngood for society",
+      "district": "Thiruvananthapuram",
+      "analysis": " Summary: A dedicated school in Varkala for special needs children, funded by tourist charity.\n\nTags: #Education, #SpecialNeeds, #Inclusion, #Charity\n\nSentiment: Positive\n\nInnovation Score: 7/10\n\nThe idea is innovative in its approach to fund special needs education through tourist charity, promoting inclusion and accessibility. However, its success is dependent on consistent tourist inflow and local support, which can vary.",
+      "submitter": "0x7daBE1C8c8D5fae90276a0F91E09dDE6f1b3485b",
+      "timestamp": "2025-07-26 18:09:26"
     }
   ],
-  "votes": {},
-  "last_updated": "2025-07-26T12:54:02.422244"
+  "votes": {
+    "Need a car": 31,
+    "Start a School near Varkala": 0
+  },
+  "last_updated": "2025-07-26T18:09:26.867065",
+  "total_submissions": 4,
+  "total_votes": 31
 }
