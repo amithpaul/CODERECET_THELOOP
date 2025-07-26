@@ -269,11 +269,13 @@ def initialize_blockchain():
     """Initialize blockchain connection with better error handling"""
     try:
         ganache_urls = [
+            os.getenv("GANACHE_URL", "http://ganache:8545"),
+            "http://ganache:7545",  # just in case
             "http://127.0.0.1:7545",
             "http://127.0.0.1:8545",
             "http://localhost:7545",
             "http://localhost:8545",
-            "HTTP://127.0.0.1:7547"
+            "http://127.0.0.1:7547"
         ]
         
         w3 = None
@@ -303,7 +305,7 @@ def initialize_blockchain():
         
         try:
             idea_nft_address = "0x5287db2bE7E0Fc9916BF5100F78D50b87e1240E6"
-            idea_nft_abi_path = Path(__file__).parent.parent / 'backend' / 'hardhat_project' / 'artifacts' / 'contracts' / 'IdeaNFT.sol' / 'IdeaNFT.json'
+            idea_nft_abi_path = Path(__file__).parent.parent / 'backend' / 'app'/ 'hardhat_project' / 'artifacts' / 'contracts' / 'IdeaNFT.sol' / 'IdeaNFT.json'
             
             if idea_nft_abi_path.exists():
                 with open(idea_nft_abi_path, 'r') as f:
@@ -317,7 +319,7 @@ def initialize_blockchain():
         
         try:
             loop_token_address = "0x82aa126e5c34b855767924BCe6741C95C87245dA"
-            loop_token_abi_path = Path(__file__).parent / 'hardhat_project' / 'artifacts' / 'contracts' / 'LoopToken.sol' / 'LoopToken.json'
+            loop_token_abi_path = Path(__file__).parent.parent / 'backend' / 'app' /'hardhat_project' / 'artifacts' / 'contracts' / 'LoopToken.sol' / 'LoopToken.json'
             
             if loop_token_abi_path.exists():
                 with open(loop_token_abi_path, 'r') as f:

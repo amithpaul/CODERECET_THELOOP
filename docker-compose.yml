@@ -1,18 +1,25 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  db:
-    image: postgres:15
-    container_name: 
-    restart: always
+  ganache:
+    image: trufflesuite/ganache-cli
     ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_DB: theloop
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: recet
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - "8545:8545"
+    command:
+      - "--accounts"
+      - "10"
+      - "--defaultBalanceEther"
+      - "1000"
+      - "--host"
+      - "0.0.0.0"
 
-volumes:
-  postgres_data:
+  streamlit:
+    build: .
+    depends_on:
+      - ganache
+    ports:
+      - "8501:8501"
+    environment:
+      - GANACHE_URL=http://ganache:8545
+    volumes:
+      - .:/app

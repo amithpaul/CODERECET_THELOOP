@@ -34,13 +34,42 @@
       "analysis": " Summary: A dedicated school in Varkala for special needs children, funded by tourist charity.\n\nTags: #Education, #SpecialNeeds, #Inclusion, #Charity\n\nSentiment: Positive\n\nInnovation Score: 7/10\n\nThe idea is innovative in its approach to fund special needs education through tourist charity, promoting inclusion and accessibility. However, its success is dependent on consistent tourist inflow and local support, which can vary.",
       "submitter": "0x7daBE1C8c8D5fae90276a0F91E09dDE6f1b3485b",
       "timestamp": "2025-07-26 18:09:26"
+    },
+    {
+      "title": "Literally nothing",
+      "description": "This place is about to flood or burndown. do something",
+      "district": "Thiruvananthapuram",
+      "analysis": " Summary: Urgent call for action to address environmental threats in Kerala.\n\nTags: #Environment, #DisasterPrevention, #ClimateChange, #SustainableDevelopment\n\nSentiment: Negative\n\nInnovation Score: 2/10\n\nThe idea described here is more of a call for action rather than an innovative solution. While addressing environmental threats is crucial, the idea lacks the innovative aspect and feasible plan to make it unique and valuable.",
+      "submitter": "0x3226393238865d3eE54D47a25117A6240e08Bae1",
+      "timestamp": "2025-07-26 19:41:54"
+    },
+    {
+      "title": "plastic enhanced bitumen",
+      "description": "plastic enhanced bitumen for fixing roads and making them more durable against rain",
+      "district": "Thiruvananthapuram",
+      "analysis": " Summary: Utilizing plastic waste to create plastic enhanced bitumen for more durable road construction in Kerala.\n\nTags: #WasteManagement, #Infrastructure, #Sustainability, #Innovation\n\nSentiment: Positive\n\nInnovation Score: 8/10\n\nThis idea takes advantage of a readily available resource (plastic waste) to improve the durability and longevity of road infrastructure, addressing two significant issues in a single solution. The collection and recycling of plastic waste can also create local job opportunities and contribute to cleaner, more sustainable communities.",
+      "submitter": "0x3226393238865d3eE54D47a25117A6240e08Bae1",
+      "timestamp": "2025-07-26 19:45:44",
+      "nft_minted": true,
+      "nft_token_id": "Unknown",
+      "tx_hash": "026279e3874a104557d1c86e85e3f7fd38926ba47205f35008bee944974f729f",
+      "rewards": [
+        {
+          "amount": 100,
+          "tx_hash": "dece3e0f27c0d7f0e320a6245e4736944e5240ce7ff51b84327996b359036177",
+          "timestamp": "2025-07-26T19:46:16.607721"
+        }
+      ]
     }
   ],
   "votes": {
     "Need a car": 31,
-    "Start a School near Varkala": 0
+    "Start a School near Varkala": 0,
+    "School in Varkala for special needs kids": 0,
+    "Literally nothing": 0,
+    "plastic enhanced bitumen": 0
   },
-  "last_updated": "2025-07-26T18:09:26.867065",
-  "total_submissions": 4,
+  "last_updated": "2025-07-26T19:46:16.607862",
+  "total_submissions": 6,
   "total_votes": 31
 }
