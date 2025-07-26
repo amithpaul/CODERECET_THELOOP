@@ -1,0 +1,8 @@
+streamlit
+together
+PyPDF2
+web3
+folium
+streamlit-folium
+plotly
+pandas
