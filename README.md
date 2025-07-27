@@ -4,7 +4,13 @@
 *Commit and save your changes here*
 
 ### Team Name : 404-notfound
-### Team Members : Adarsh abhraham johnson,Amith Paul Siju,A,Arvin Joseph
+### Team Members : 
+1.Adarsh Abhraham Johnson
+2.Amith Paul Siju
+3.Arvin Joseph
+4.Arjun T Aghilesh
+
+
 ### Project Description: 
 The Loop is a Web3-enabled digital ecosystem designed to bridge the communication gap between the youth and the government in Kerala, India. It leverages the power of Generative AI to make governance accessible and a blockchain to make civic participation transparent and rewarding.
 
