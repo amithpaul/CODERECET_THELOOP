@@ -142,8 +142,8 @@ The analyzed idea is then displayed on the Officials' Dashboard, where community
 [Add any extra demo materials/links]
 
 ## Team Contributions
-[Adarsh Abraham Johnson]: [ Implimented Web3 and Agentic AI parts ]
-[Amith Paul Siju]: [Implimented Devop, ML and Deployment parts]
-[Arvin Joseph]: [Frontend Implementations and design parts]
-[Arjun T Aghilesh]: [Frontend Implementations and design parts]
+Adarsh Abraham Johnson: Implimented Web3 and Agentic AI parts 
+Amith Paul Siju: Implimented Devop, ML and Deployment parts
+Arvin Joseph: Frontend Implementations and design parts
+Arjun T Aghilesh: [Frontend Implementations and design parts]
 
