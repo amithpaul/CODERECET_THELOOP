@@ -20,6 +20,8 @@ services:
     ports:
       - "8501:8501"
     environment:
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_WATCH_USE_POLLING=false
       - GANACHE_URL=http://ganache:8545
     volumes:
       - .:/app
