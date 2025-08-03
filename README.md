@@ -103,8 +103,44 @@ cd hardhat_project
 npm install
 cd ..
 
+### Run with Docker
 
-### Run
+Running the entire application stack is automated using Docker. This is the recommended method for both development and testing.
+
+**Prerequisites:**
+* [Docker](https://docs.docker.com/get-docker/)
+* [Docker Compose](https://docs.docker.com/compose/install/)
+
+**Instructions:**
+
+1.  **Clone the repository** (if you haven't already):
+    ```bash
+    git clone [https://github.com/amithpaul/CODERECET_THELOOP.git](https://github.com/amithpaul/CODERECET_THELOOP.git)
+    cd CODERECET_THELOOP
+    ```
+
+2.  **Launch the Application:**
+    From the root directory of the project, run the following command:
+    ```bash
+    docker-compose up --build
+    ```
+    This single command will:
+    * Start a local Ganache blockchain instance.
+    * Build the application container using the `Dockerfile`.
+    * Automatically compile and deploy your smart contracts to the Ganache instance.
+    * Start the Streamlit web application.
+
+3.  **Access the Application:**
+    Once the containers are running, open your web browser and navigate to:
+    [**http://localhost:8501**](http://localhost:8501)
+
+4.  **Stopping the Application:**
+    To stop all running containers, press `Ctrl + C` in the terminal where `docker-compose` is running, or open a new terminal in the same directory and run:
+    ```bash
+    docker-compose down
+    ```
+
+### Run w/o docker
 Start your local blockchain (Ganache): Open the Ganache application on your computer.
 
 Deploy the smart contracts:
